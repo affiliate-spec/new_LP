@@ -3551,7 +3551,8 @@ function clearSoftFail(){
 function send(payload){
   var url = cfg('INTEGRATIONS.WEBHOOK_URL');
   var body = JSON.stringify(payload);
-  var idem = payload.idempotency_key || '';
+  /* payload.idempotency_key rides inside `body` — see attemptSend below for why
+     it must not be lifted into a header. */
   clearSoftFail();
   if (!url){
     /* DEBUG only. This object is the whole lead record — name, phone in three
@@ -3579,10 +3580,20 @@ function send(payload){
   function attemptSend(){
     var ctrl = ('AbortController' in window) ? new AbortController() : null;
     var timer = ctrl ? setTimeout(function(){ ctrl.abort(); }, CONFIG.BEHAVIOUR.WEBHOOK_TIMEOUT_MS) : 0;
-    var headers = {'Content-Type':'application/json'};
-    /* The request is already preflighted by its content type, so this costs
-       nothing, and it is what lets a receiver drop the second and third copy. */
-    if (idem) headers['Idempotency-Key'] = idem;
+    /* MUST STAY A CORS SIMPLE REQUEST. Two things here used to force a preflight
+       — an application/json content type, and the custom Idempotency-Key header
+       — and the sink answers OPTIONS with a 500 carrying no Access-Control-*
+       headers, so the browser refused to send the POST at all. Every submit then
+       burned the retry and limped out on the sendBeacon fallback below.
+       text/plain is on the CORS safelist and there is no custom header, so this
+       now goes straight out. Nothing is lost: the receiver reads the identical
+       JSON string from e.postData.contents either way — it is exactly what the
+       beacon has always sent it — and the idempotency key travels INSIDE the
+       body as payload.idempotency_key, which is the only place a Google Apps
+       Script could ever read it from (doPost is not given request headers).
+       If you point WEBHOOK_URL at a sink that does answer preflight, this can
+       go back to application/json; it does not need to. */
+    var headers = {'Content-Type':'text/plain;charset=UTF-8'};
     fetch(url, { method:'POST', headers: headers,
                  body: body, keepalive:true, signal: ctrl ? ctrl.signal : undefined })
       .then(function(r){ if (!r.ok) throw new Error(String(r.status)); return r; })
