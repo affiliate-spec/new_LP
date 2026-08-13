@@ -828,7 +828,7 @@ var CONFIG = {
     OG_URL:       '',          // SLOT — '' → og:url not emitted; falls back to CANONICAL
     ROBOTS:       'noindex,nofollow',   // paid-traffic page; set '' to allow indexing
     LOCALE:       'en_IN',
-    PAGE_VERSION: 'stax-2026-08-14'     // ships in the payload; bump on any copy edit
+    PAGE_VERSION: 'stax-2026-08-14.2'   // ships in the payload; bump on any copy edit
   },
 
   /* ── 2. BRAND ─────────────────────────────────────────────────────────────
@@ -1020,10 +1020,21 @@ var CONFIG = {
       working_h2:    'The arithmetic, so you can check it',
       working_btn:   'Show the working',
       working_btn_open:'Hide the working',
-      changes_h2:    'What changes when each one is closed',
+      /* THE PER-LEAK "WHAT CHANGES" ROWS ARE OFF. changes_h2 is the switch:
+         blank it and the "up to ₹X back" row per leak is not built at all, and
+         the block keeps only "Fix this one first" below. Restore the sentence
+         and the rows come back — the renderer reads this key, not a flag. */
+      changes_h2:    '',
       changes_note:  'Modelled range, not a guarantee.',
       first_h:       'Fix this one first: {leak_name}',
-      table_cap:     'Your growth costs, before and after',
+      /* THE BEFORE/AFTER TABLE IS OFF. table_cap is its switch, on the same
+         convention as changes_h2 above: blank → no table, no total row, no
+         annual-difference strip, and neither note under it. The recovery
+         arithmetic behind it is untouched in MODEL and still ships in the
+         payload; it simply is not drawn on this screen. Restore the caption
+         and the whole block renders again, so all seven strings below it are
+         kept rather than deleted. */
+      table_cap:     '',
       table_h_a:     'Cost component',
       table_h_b:     'Your setup now',
       table_h_c:     'Each leak closed',
@@ -1088,36 +1099,39 @@ var CONFIG = {
                      'again when you are past ₹50,000 a month.',
 
       /* THE ASSUMPTION LIST, under "the arithmetic, so you can check it".
-         This is where the landing page's promise — that every constant is
-         printed on the result page — is actually kept. If you add a constant
-         to MODEL or a scored value to QUESTIONS, it needs a line here. Every
-         {token} is filled from the live model, never typed twice.            */
+         TRIMMED BY CLIENT DECISION (2026-08-14) to three lines: the benchmark,
+         the range, the ceilings. Every other line is blanked, NOT deleted —
+         each renders again the moment its string is restored, and every
+         {token} is still filled from the live model, never typed twice.
+         What survives the trim, and what does not:
+           • The per-leak WORKING LINES above this list are untouched. They are
+             the landing page's actual promise ("every figure comes with its
+             working"), and they still print the arithmetic for all five leaks.
+           • These blanked lines were the CONSTANTS behind that arithmetic. They
+             are no longer on the page, so nobody can now check the recovery
+             ratios, the coordination hours or the automation share without
+             asking. tracking_basis is the one that costs most: it was the only
+             place the page admitted the misallocation ladder is our judgement
+             rather than a measurement, and the comment on QUESTIONS q_tracking
+             points here for exactly that reason. If a buyer asks where the
+             tracking percentages come from, that answer now has to be given on
+             the call — restore the line rather than improvising one.          */
       assumptions: {
         bench_table:  'Benchmark used: {bench} a month.',
         bench_derived:'Benchmark used: {bench} a month — the greater of {floor} and ' +
                       '{share}% of your spend.',
-        automation:   'Automation is modelled to remove {pct}% of manual hours, not all of them.',
-        coordination: 'Coordination is modelled at {hours} hours a month per extra party, ' +
-                      'at your own hourly rate.',
-        coordination_default:'Coordination is modelled at {hours} hours a month per extra ' +
-                      'party, at {rate} an hour — a default, because your manual hours were ' +
-                      'low enough that we never asked you for a rate.',
-        recovery:     'Closing a leak is modelled to recover {fee}% of the fee gap, {ops}% ' +
-                      'of manual hours, {vendors}% of vendor coordination, {tools}% of tool ' +
-                      'overlap and {tracking}% of misallocated media — never all of it.',
+        automation:   '',
+        coordination: '',
+        coordination_default:'',
+        recovery:     '',
         band:         'The range under your figure is the estimate plus or minus {pct}%, ' +
                       'rounded outward to the nearest {unit}.',
-        tracking_basis:'The share of media we model as misallocated at each tracking state ' +
-                      '({ladder}) is our own estimate from the accounts we have audited. It ' +
-                      'is a judgement, not a measurement, and it is the constant most worth ' +
-                      'arguing with us about.',
+        tracking_basis:'',
         guards:       'No single leak may exceed {single}% of your annual spend, and the ' +
                       'total is held at or under {total}%. Both ceilings are applied to the ' +
                       'rounded figures you can see, so the printed number never breaks them.',
-        exclusions:   'Retainers you pay to people who do not touch ads are deliberately ' +
-                      'excluded. Including them would produce a bigger number and a weaker one.',
-        assumed:      'You told us you were not sure about: {list}. The model used the middle ' +
-                      'of the published range and says so here.'
+        exclusions:   '',
+        assumed:      ''
       }
     },
     errors: {
@@ -1140,7 +1154,12 @@ var CONFIG = {
       part_of: 'Part of Exly',
       privacy: 'Privacy',
       method:  'How this number is calculated',
-      wa_group:'Questions? Join our WhatsApp group'   // dropped when the URL is ''
+      /* OFF BY DECISION: there is exactly one WhatsApp-group control on the
+         page and it is the button under the result CTA. Fill this label to put
+         a second one in the footer as well — it also needs
+         INTEGRATIONS.WHATSAPP_GROUP_URL, and both are dropped whole when
+         either is ''. */
+      wa_group:''
     }
   },
 
@@ -1261,10 +1280,12 @@ var CONFIG = {
       title:'Do you know which ad actually brings the money?',
       /* Basis: OUR OWN JUDGEMENT, laddered 0 / 3 / 6 / 9 / 12% of annual media.
          No published source states a misallocation percentage, and at the top
-         band this is the single largest line on the page — so it is disclosed
-         as a judgement in the rendered assumption list (result.assumptions
-         .tracking_basis), not presented as a measurement. If someone produces
-         a real distribution from the audited accounts, replace both.         */
+         band this is the single largest line on the page. The disclosure that
+         says so — result.assumptions.tracking_basis — is written and ready but
+         BLANKED as of 2026-08-14, so nothing on the result page currently tells
+         the visitor this ladder is a judgement rather than a measurement. Say
+         it on the call, or restore that line. If someone produces a real
+         distribution from the audited accounts, replace both.                */
       options:[ {id:'k_clean', label:'Yes, exactly',      sub:'Server-side tracking is wired', value:0.00},
                 {id:'k_most',  label:'Mostly',            sub:'Pixel only, but it is healthy', value:0.03},
                 {id:'k_half',  label:'About half is a guess', value:0.06},
@@ -3008,13 +3029,19 @@ var ctaBound = false;
 function renderResultTail(){
   var R = state.result, M = CONFIG.MODEL, I = R.inputs, D = R.detail;
 
-  /* 7 — what changes. compute() clamps every recovery figure to the leak above
-     it, so the page structurally cannot over-promise. */
+  /* 7 — what changes, then what to fix first. compute() clamps every recovery
+     figure to the leak above it, so the page structurally cannot over-promise.
+     COPY.result.changes_h2 is the switch for the per-leak rows: blank, and the
+     block renders "Fix this one first" alone. anyLeak is still counted over
+     every leak either way, because it is what decides whether this block has
+     anything to say at all. */
   var cb = $('#rChangesBlk'), ch = $('#rChanges'); clear(ch);
+  var changesOn = !!cfg('COPY.result.changes_h2');
   var anyLeak = false;
   CONFIG.LEAKS.forEach(function(L){
     var v = R.leaks[L.key]; if (v <= 0) return;
     anyLeak = true;
+    if (!changesOn) return;
     var row = el('div','fixrow');
     var top = el('div','fixrow__top');
     top.appendChild(el('p','h4', L.name));
@@ -3029,7 +3056,12 @@ function renderResultTail(){
     setTextKeep($('#rChangesH'), cfg('COPY.result.changes_h2'));
     var big = R.biggest ? leakByKey(R.biggest) : null;
     if (big){
-      setTextKeep($('#rFirstH'), t(cfg('COPY.result.first_h'), { leak_name: big.name }));
+      /* With the rows off, "Fix this one first" is the block's only heading and
+         has to look like one. It is still an h3 under the hidden h2, so the
+         outline is unchanged — this is the type role, not the level. */
+      var fh = $('#rFirstH');
+      if (fh) fh.className = changesOn ? 'h4 sub' : 'd3';
+      setTextKeep(fh, t(cfg('COPY.result.first_h'), { leak_name: big.name }));
       var fl = $('#rFirstFixes'); clear(fl);
       (cfg('FIXES.' + R.biggest, []) || []).forEach(function(f){ fl.appendChild(el('li', null, f)); });
     } else {
@@ -3038,7 +3070,14 @@ function renderResultTail(){
   }
 
   /* 8 — comparison table. The right column is each row minus the modelled
-     recovery, so the difference strip and the block above it cannot disagree. */
+     recovery, so the difference strip and the block above it cannot disagree.
+     COPY.result.table_cap is the switch: blank, and none of this is built —
+     no rows, no totals, no difference strip, no notes. Nothing here feeds the
+     payload or the WhatsApp message, both of which read compute() directly, so
+     switching the table off changes what is drawn and nothing else. */
+  var tableOn = !!cfg('COPY.result.table_cap');
+  if (!tableOn){ setHidden($('#rCompareBlk'), true); clear($('#rTbody')); }
+  else {
   var mgmt = D.pctAnnual + D.flatAnnual;
   var rows = [
     { k:'fee',      trad: mgmt },
@@ -3085,6 +3124,7 @@ function renderResultTail(){
   setTextKeep($('#rTableNote'), diff > 0 ? cfg('COPY.result.table_note') : cfg('COPY.result.diff_none'));
   var region = $('#rTableRegion');
   if (region) region.setAttribute('aria-label', cfg('COPY.result.table_cap') + ', scrollable');
+  }
 
   /* 9 — proof. Text only, zero requests. Named-result slots stay empty.
      Its own arrays, NOT the landing page's: the visitor read "Who we are" on the
