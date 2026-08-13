@@ -484,6 +484,9 @@ tfoot td{ font-family:var(--font-num); font-size:19px; font-weight:700; letter-s
 .leakrow__sting{ margin-top:var(--s2); font-size:15px; line-height:1.5; font-weight:600; color:var(--ink); max-width:var(--measure-prose); }
 /* the ref-code line under the call ask */
 .refnote{ margin-top:var(--s2); color:var(--accent); font-weight:600; }
+/* the WhatsApp group link under the call ask — .btn2, deliberately not .cta:
+   there is exactly one primary action on this screen and it is in the dock */
+.wagroup{ margin-top:var(--s5); }
 
 /* ── who-we-are highlight card ── the first thing after the hero */
 .proofcard{ background:var(--surface); border:1px solid var(--line);
@@ -762,6 +765,7 @@ tfoot td{ font-family:var(--font-num); font-size:19px; font-weight:700; letter-s
         <p class="body-sm refnote" id="rCtaRef"></p>
         <p class="softfail" id="rSoftFail" role="alert" hidden></p>
         <p class="keep" id="rKeep"></p>
+        <p class="wagroup" id="rWaGroupWrap" hidden><a class="btn2" id="rWaGroup" href="#" target="_blank" rel="noopener"></a></p>
       </section>
     </div>
     <div class="dock" id="rDock">
@@ -824,7 +828,7 @@ var CONFIG = {
     OG_URL:       '',          // SLOT — '' → og:url not emitted; falls back to CANONICAL
     ROBOTS:       'noindex,nofollow',   // paid-traffic page; set '' to allow indexing
     LOCALE:       'en_IN',
-    PAGE_VERSION: 'stax-2026-08-13'     // ships in the payload; bump on any copy edit
+    PAGE_VERSION: 'stax-2026-08-14'     // ships in the payload; bump on any copy edit
   },
 
   /* ── 2. BRAND ─────────────────────────────────────────────────────────────
@@ -854,7 +858,11 @@ var CONFIG = {
                            //        renders instead. It is never a dead button.
     WHATSAPP_NUMBER: '',   // SLOT — digits only, country code first: '919876543210'
     CONTACT_EMAIL:   '',   // SLOT — CTA fallback AND the consent-withdrawal route
-    PRIVACY_URL:     '',   // SLOT — '' → the link is dropped; the inline notice stays
+    PRIVACY_URL:     'https://exlyapp.com/static/html/privacy_policy.html',
+                           // SLOT — '' → the link is dropped; the inline notice stays
+    WHATSAPP_GROUP_URL: 'https://chat.whatsapp.com/HccoD2Vda8aBr1PSkkcSQN',
+                           // SLOT — '' → the result-page group button and the footer
+                           //        link are both dropped. Never a dead control.
     META_PIXEL_ID:   '',   // SLOT — '' → fbq is never defined, no external request
     GTM_ID:          ''    // SLOT — '' → GTM is never loaded
   },
@@ -871,10 +879,12 @@ var CONFIG = {
      lines — which carry the "withdrawal is easy" promise — only appear once a
      route to withdraw actually exists.                                        */
   CONSENT: {
-    CONSENT_TEXT_VERSION: 'c-2026-08-13.3',
+    CONSENT_TEXT_VERSION: 'c-2026-08-14.1',
+    /* No ad-measurement clause: META_PIXEL_ID and GTM_ID are both empty, so this
+       page sets no ad cookies. If either is ever filled, that clause has to come
+       back and this version has to be bumped again. */
     LABEL: 'I agree to RevX contacting me on WhatsApp, phone and email about this ' +
-           'diagnostic and its follow-up, to my answers being used to prepare it, ' +
-           'and to the ad-measurement cookies this page sets.',
+           'diagnostic.',
     /* REMOVED BY CLIENT DECISION (2026-08-13): the expandable "What we collect,
        and who sees it" itemised notice. An empty summary + empty list hides the
        whole block. NOTE: that notice was the page's DPDP §5 itemised disclosure
@@ -898,9 +908,10 @@ var CONFIG = {
       eyebrow:   'For creators spending ₹50,000+ a month on ads',
       h1_a:      '15% of ₹10L a month is ₹18L a year.',
       h1_b:      'What did your agency do extra?',
-      sub:       'Nine taps. Your own number, in rupees, with the working shown. ' +
-                 'If your setup is clean, it says so.',
+      sub:       'Nine taps. Your own number, in rupees. If your setup is clean, it says so.',
       honesty_t: 'What this is',
+      /* This box carries the "working shown" promise. Do not repeat it in `sub`
+         or in `contract` — it read three times on one screen. */
       honesty:   'An estimate from your answers and published agency-fee ranges. ' +
                  'Every figure comes with its working, so you can check it against ' +
                  'your own invoices.',
@@ -914,13 +925,13 @@ var CONFIG = {
         rows: [ ['₹5L',  '₹75,000'],
                 ['₹10L', '₹1,50,000'],
                 ['₹20L', '₹3,00,000'] ],
-        extra: 'Same team. Same dashboards. Same weekly call.',
-        foot:  'That is not a service. That is a scale tax.'
+        extra: '',
+        foot:  'Same team, same dashboards, same weekly call. That is not a service. ' +
+               'That is a scale tax.'
       },
       leaks_h2:  'The same five leaks show up in nine out of ten accounts',
       contract_h2:'What you walk away with',
       contract:  ['Your leak in rupees, split five ways.',
-                  'The working behind every figure.',
                   'What to fix first, in order.'],
       proof_h:   'Who we are',
       /* The fit strip. Empty array hides the block. */
@@ -1002,7 +1013,10 @@ var CONFIG = {
       basis:         'Modelled from {spend} a month of ad spend, {fee_desc}, {tools} a ' +
                      'month of tools and {tracking_desc}.',
       method_link:   'How this is calculated',
-      where_h2:      'Where it goes',
+      /* This list carries both halves — a live leak, and a nil row that says
+         "already closed". The heading has to promise both, or the good news
+         reads like an afterthought. */
+      where_h2:      'What is leaking, and what is not',
       working_h2:    'The arithmetic, so you can check it',
       working_btn:   'Show the working',
       working_btn_open:'Hide the working',
@@ -1039,19 +1053,27 @@ var CONFIG = {
       unqualified_h2:'You are below the range this tool models',
       unqualified_body:'It is built for accounts spending ₹50,000 a month or more. Here ' +
                      'is the arithmetic anyway — run it again when you get there.',
-      cta_h:         'Want the same arithmetic run on your live account?',
+      /* This block is advice, not a sales page. It may offer to check the
+         arithmetic against the real account. It may NOT pitch what RevX sells,
+         quote a price, or claim one tool does all of this — none of that is
+         something this page's nine answers can support. */
+      cta_h:         'Want us to check this against your real account?',
       cta_body:      'Fifteen minutes. We open your ad account, your tool bill and your ' +
-                     'tracking, and we do this properly instead of from a dropdown.',
+                     'tracking, and tell you which of these figures is actually true ' +
+                     'for you — from your numbers, not from a dropdown.',
       /* Rendered only on call-tier results. The ref is already in the CRM
          payload, so quoting it genuinely lets the call start pre-loaded.    */
       ref_note:      'Quote ref {ref} on the call and we start from your numbers, not ' +
                      'from zero.',
       cta:           'Book my 15-min plan call',
-      cta_note:      'Free 15-min audit. No slides. No pitch. Just your numbers on screen. ' +
-                     'You leave with a plan whether or not you sign.',
+      cta_note:      'Free, and fifteen minutes. You leave with the answer either way.',
       cta_consent:   'Booking opens in a new tab. Nothing is sent anywhere until you book.',
       cta_wa:        'Message us on WhatsApp',
       cta_email:     'Email us your numbers',
+      /* Rendered as a secondary button under the CTA block, and again in the
+         footer. Both are dropped whole when INTEGRATIONS.WHATSAPP_GROUP_URL
+         is ''. It is a group, not a sales channel — keep the label a question. */
+      wa_group:      'Questions? Join our WhatsApp group',
       /* None of these may assert that a message has already been sent — whether
          one goes out depends on WEBHOOK_URL, which the CTA does not know about. */
       cta_note_wa:   'Message us on that thread and we’ll find fifteen minutes.',
@@ -1117,7 +1139,8 @@ var CONFIG = {
       scope:   'Meta + Google Ads · Funnels · CRM · Automation',
       part_of: 'Part of Exly',
       privacy: 'Privacy',
-      method:  'How this number is calculated'
+      method:  'How this number is calculated',
+      wa_group:'Questions? Join our WhatsApp group'   // dropped when the URL is ''
     }
   },
 
@@ -1482,8 +1505,17 @@ var CONFIG = {
       { value:'1,00,000+', label:'creators supported' },
       { value:'400+',      label:'creator ad accounts audited' }
     ],
-    audits_line:'We have audited 400+ creator ad accounts. The same five leaks show up ' +
-                'in nine out of ten. Here they are, in plain English.',        // CLAIM
+    /* The result page's own copy of the "Who we are" block. EMPTY BY DESIGN:
+       the visitor already read BACKERS and STATS on the landing page, and by
+       the result they are reading their own figures, not ours. Fill these two
+       (same shapes as BACKERS and STATS above) only if you want the block back
+       on the result screen — an empty pair renders nothing there at all. */
+    RESULT_BACKERS: [],
+    RESULT_STATS: [],
+    /* The "nine out of ten" half of this line lives in COPY.landing.leaks_h2,
+       directly above it on screen. Do not say it twice. */
+    audits_line:'We have audited 400+ creator ad accounts. Here they are, in plain ' +
+                'English.',                                                    // CLAIM
     /* Landing page only. NEVER rendered inside a personalised result, a tier,
        a fix, or the WhatsApp message. Meta reviews the destination page.
        FRAMING IS LOAD-BEARING: RevX publishes these under "Creator Milestones
@@ -1495,10 +1527,11 @@ var CONFIG = {
       { value:'+38% qualified leads',       note:'RevX-reported creator milestone' },
       { value:'12 hrs/week ops saved',      note:'RevX-reported creator milestone' }
     ],
-    OUTCOMES_DISCLAIMER:'These are milestones RevX reports for creators who moved to ' +
-                        'Exly. They are not an average, they are not a projection for ' +
-                        'your account, and nothing on this page is a guarantee of any ' +
-                        'result.',
+    /* The per-item `note` already says "RevX-reported creator milestone" three
+       times above this line. This one only has to carry what the notes cannot:
+       these are not an average and not a promise. */
+    OUTCOMES_DISCLAIMER:'Milestones individual creators reached after moving to Exly. ' +
+                        'Not an average, and not a projection for your account.',
     CASE_STUDIES: [],    // EMPTY BY DESIGN — see the block comment above
     BENCHMARK: null      // SLOT — a real distribution from the 400+ audited accounts.
                          // While null, NO cohort or percentile claim renders anywhere.
@@ -3053,9 +3086,12 @@ function renderResultTail(){
   var region = $('#rTableRegion');
   if (region) region.setAttribute('aria-label', cfg('COPY.result.table_cap') + ', scrollable');
 
-  /* 9 — proof. Text only, zero requests. Named-result slots stay empty. */
-  renderProof($('#rBackers'), $('#rStats'));
-  setHidden($('#rProofBlk'), !(cfg('PROOF.BACKERS',[]).length || cfg('PROOF.STATS',[]).length));
+  /* 9 — proof. Text only, zero requests. Named-result slots stay empty.
+     Its own arrays, NOT the landing page's: the visitor read "Who we are" on the
+     way in, and shipped empty this whole block is absent from the result. */
+  var rBk = cfg('PROOF.RESULT_BACKERS', []) || [], rSt = cfg('PROOF.RESULT_STATS', []) || [];
+  renderProof($('#rBackers'), $('#rStats'), rBk, rSt);
+  setHidden($('#rProofBlk'), !(rBk.length || rSt.length));
 
   /* 10 — the ask.
      NOTHING HERE IS REMOVED FROM THE DOM. This block used to delete #rDock (and
@@ -3071,6 +3107,15 @@ function renderResultTail(){
   setTextKeep($('#rCtaRef'), (R.show_call && refCode)
     ? t(cfg('COPY.result.ref_note'), { ref: refCode }) : '');
   setTextKeep($('#rKeep'), cfg('COPY.result.keep_this'));
+  /* The WhatsApp group. Secondary by construction — .btn2, not .cta — and it
+     renders on every result, including the ones we do not ask for a call on:
+     a question is not a sale. No URL or no label → hidden, never a dead link. */
+  var grpWrap = $('#rWaGroupWrap'), grpLink = $('#rWaGroup'),
+      grpUrl = cfg('INTEGRATIONS.WHATSAPP_GROUP_URL'), grpLabel = cfg('COPY.result.wa_group');
+  if (grpWrap && grpLink){
+    if (grpUrl && grpLabel){ grpLink.href = grpUrl; grpLink.textContent = grpLabel; }
+    setHidden(grpWrap, !(grpUrl && grpLabel));
+  }
   var dock = $('#rDock'), btn = $('#rCta');
   var target = ctaTarget();
   if (!R.show_call){
@@ -3114,15 +3159,18 @@ function renderResultTail(){
                                 : cfg('COPY.result.cta_note_wa'));
   }
 }
-function renderProof(backersNode, statsNode){
+/* The two arrays are passed in, not read here: the landing page and the result
+   page draw this block from different slots, and only the landing one is filled
+   in the shipped config. */
+function renderProof(backersNode, statsNode, backers, stats){
   /* Hidden rather than removed: this runs again on every result re-render. */
-  var backers = cfg('PROOF.BACKERS', []) || [];
+  backers = backers || [];
   if (backersNode){
     clear(backersNode);
     backers.forEach(function(b){ backersNode.appendChild(el('li', null, b)); });
     setHidden(backersNode, !backers.length);
   }
-  var stats = cfg('PROOF.STATS', []) || [];
+  stats = stats || [];
   if (statsNode){
     clear(statsNode);
     stats.forEach(function(s){
@@ -3482,8 +3530,9 @@ function renderLanding(){
   var lc = $('#lContract'); clear(lc);
   (C.contract || []).forEach(function(s){ lc.appendChild(el('li', null, s)); });
   setText($('#lProofH'), C.proof_h);
-  renderProof($('#lBackers'), $('#lStats'));
-  setHidden($('#lProofBlk'), !(cfg('PROOF.BACKERS',[]).length || cfg('PROOF.STATS',[]).length));
+  var lBk = cfg('PROOF.BACKERS', []) || [], lSt = cfg('PROOF.STATS', []) || [];
+  renderProof($('#lBackers'), $('#lStats'), lBk, lSt);
+  setHidden($('#lProofBlk'), !(lBk.length || lSt.length));
   /* The fit strip — who this instrument is for, in plain nouns. */
   var fits = C.fit || [];
   if (fits.length){
@@ -3552,6 +3601,12 @@ function renderFooter(){
     var p = document.createElement('p');
     var a = el('a', null, F.privacy); a.href = purl; a.target = '_blank'; a.rel = 'noopener';
     p.appendChild(a); host.appendChild(p);
+  }
+  var gurl = cfg('INTEGRATIONS.WHATSAPP_GROUP_URL');
+  if (gurl && F.wa_group){
+    var p3 = document.createElement('p');
+    var a3 = el('a', null, F.wa_group); a3.href = gurl; a3.target = '_blank'; a3.rel = 'noopener';
+    p3.appendChild(a3); host.appendChild(p3);
   }
   if (state.screen === 'result' && F.method){
     var p2 = document.createElement('p');
