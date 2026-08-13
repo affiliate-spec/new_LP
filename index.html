@@ -182,7 +182,12 @@ img,svg{ max-width:100%; }
   max-width:var(--max); margin-inline:auto;
   padding:var(--s5) var(--gutter) 0;
 }
-.screen__body{ flex:1 1 auto; }
+/* The bottom padding is the sticky dock's own fade allowance. .dock::before
+   lays a 24px gradient over whatever sits directly above the dock, so without
+   this the last line of every screen came to rest inside that fade and read as
+   half-erased — on the result screen it was the WhatsApp button, which a fade
+   makes look disabled. Keep this at or above the ::before height. */
+.screen__body{ flex:1 1 auto; padding-bottom:var(--s6); }
 .stack > * + *{ margin-top:var(--s4); }
 .rule{ border:0; border-top:1px solid var(--line); margin:var(--s6) 0; }
 
@@ -373,7 +378,10 @@ img,svg{ max-width:100%; }
 }
 /* The last-resort fallback in fitMoney(). .money is a flex row, so it needs
    flex-wrap as well as white-space to be able to break at all. */
-.money--wrap{ white-space:normal; flex-wrap:wrap; }
+/* line-height .92 lets the glyphs sit ~5px below their own box, which is fine
+   on one line (the rail below clears it by 16px) and collides with the next
+   line's ascenders the moment this fallback wraps. Give the wrapped case room. */
+.money--wrap{ white-space:normal; flex-wrap:wrap; line-height:1.04; }
 .money__cur{ font-size:.52em; font-weight:600; letter-spacing:-.01em; }
 .money__num{ font-variant-numeric:tabular-nums lining-nums; }
 .money--sm{ --money-size:clamp(30px, 8.5vw, 46px); }
@@ -402,6 +410,11 @@ img,svg{ max-width:100%; }
 .leakrow__x.on{ opacity:1; transition:opacity var(--t-fast) var(--ease-out); }
 
 /* ── METHOD DISCLOSURE ───────────────────────────────────────────────────── */
+/* The button had no gap above it, so its focus ring — 2px of outline at 2px of
+   offset — was drawn straight through the baseline of the h2. The gap has to
+   clear 4px at minimum; s3 also stops the sunk fill from reading as part of
+   the heading. */
+.method{ margin-top:var(--s3); }
 .method__btn{
   display:flex; align-items:center; justify-content:space-between; gap:var(--s3);
   width:100%; min-height:48px; padding:12px 14px; text-align:left; cursor:pointer;
@@ -420,7 +433,9 @@ img,svg{ max-width:100%; }
 
 /* ── WHAT CHANGES ────────────────────────────────────────────────────────── */
 .fixrow{ padding:var(--s4) 0; border-bottom:1px solid var(--line); }
-.fixrow:first-child{ border-top:1px solid var(--line); }
+/* Same rule-on-the-text-above defect as .leaklist. Only reachable with
+   COPY.result.changes_h2 restored, which is why it is easy to miss. */
+.fixrow:first-child{ border-top:1px solid var(--line); margin-top:var(--s3); }
 .fixrow__top{ display:flex; align-items:baseline; justify-content:space-between; gap:var(--s3); }
 .fixrow__gain{ flex:0 0 auto; font-family:var(--font-num); font-size:15px; font-weight:600; color:var(--gain); font-variant-numeric:tabular-nums; }
 .fixrow__d{ margin-top:var(--s2); color:var(--ink-soft); font-size:15px; }
@@ -466,16 +481,23 @@ tfoot td{ font-family:var(--font-num); font-size:19px; font-weight:700; letter-s
   font-family:var(--font-num); font-size:12px; line-height:1.9; color:var(--ink-faint);
 }
 .site-footer a{ color:var(--accent); }
-.resume{ margin-top:var(--s5); padding:16px; background:var(--sunk); border:1px solid var(--line); border-radius:var(--r); }
+/* margin-bottom as well as top: the card's own border was resting 1px above
+   the eyebrow of the hero below it, so the box read as a lid on the headline. */
+.resume{ margin:var(--s5) 0; padding:16px; background:var(--sunk); border:1px solid var(--line); border-radius:var(--r); }
 .resume__row{ display:flex; gap:var(--s2); margin-top:var(--s3); }
 .resume__row .btn2{ min-height:48px; }
+/* The first row's border-top was landing 2.5px under the descenders of the
+   line above it, so the rule read as an underline struck through the text. */
+.leaklist{ margin-top:var(--s3); }
 .leaklist li{ padding:var(--s4) 0; border-top:1px solid var(--line); }
 .leaklist b{ display:block; }
 .leaklist p{ margin-top:var(--s2); color:var(--ink-soft); font-size:15px; line-height:1.5; max-width:var(--measure-prose); }
 
 /* ── the fee ladder ── the landing page's one visual argument: spend up,
    cut up, nothing extra. The cut column carries the leak colour. */
-.taxtable{ width:100%; min-width:0; border-collapse:collapse; font-variant-numeric:tabular-nums; }
+/* The header row sat directly on the h2 above it — no border involved, the two
+   type sizes simply touched. Every block under a heading needs this gap. */
+.taxtable{ width:100%; min-width:0; margin-top:var(--s3); border-collapse:collapse; font-variant-numeric:tabular-nums; }
 .taxtable th{ text-align:left; padding:0 0 8px; border-bottom:1px solid var(--line); font-weight:500; white-space:normal; letter-spacing:.06em; }
 .taxtable td{ padding:12px 0; border-bottom:1px solid var(--line); font-size:16px; font-weight:600; }
 @media (min-width:400px){ .taxtable td{ font-size:18px; } }
@@ -489,9 +511,18 @@ tfoot td{ font-family:var(--font-num); font-size:19px; font-weight:700; letter-s
 .leakrow__sting{ margin-top:var(--s2); font-size:15px; line-height:1.5; font-weight:600; color:var(--ink); max-width:var(--measure-prose); }
 /* the ref-code line under the call ask */
 .refnote{ margin-top:var(--s2); color:var(--accent); font-weight:600; }
-/* the WhatsApp group link under the call ask — .btn2, deliberately not .cta:
-   there is exactly one primary action on this screen and it is in the dock */
+/* the WhatsApp group link under the call ask. It keeps .btn2's geometry — 52px
+   rather than the dock CTA's 56px — but takes the accent fill, because with
+   BOOKING_URL empty it is the only button on the result screen and an outline
+   was reading as disabled. Scoped to .wagroup so the resume screen's own two
+   .btn2 controls stay outlined. */
 .wagroup{ margin-top:var(--s5); }
+.wagroup .btn2{
+  background:var(--accent); border-color:var(--accent); color:var(--on-accent);
+  font-weight:700;
+  transition:background-color var(--t-micro) var(--ease-out), transform var(--t-micro) var(--ease-out);
+}
+.wagroup .btn2:active{ background:var(--accent-press); border-color:var(--accent-press); }
 
 /* ── who-we-are highlight card ── the first thing after the hero */
 .proofcard{ background:var(--surface); border:1px solid var(--line);
@@ -499,9 +530,47 @@ tfoot td{ font-family:var(--font-num); font-size:19px; font-weight:700; letter-s
 .proofcard .stats b{ color:var(--accent); }
 
 /* ── fit strip ── plain nouns in pills */
-.fitrow{ display:flex; flex-wrap:wrap; gap:8px; list-style:none; margin:0; padding:0; }
-.fitrow li{ border:1px solid var(--line); background:var(--surface); color:var(--ink-soft);
-  padding:8px 14px; border-radius:999px; font-size:14px; }
+/* the pills' top borders were landing on the descenders of the heading above */
+.fitrow{ display:flex; flex-wrap:wrap; gap:8px; list-style:none; margin:var(--s3) 0 0; padding:0; }
+.fitrow li, .marquee__pill{
+  border:1px solid var(--line); background:var(--surface); color:var(--ink-soft);
+  padding:8px 14px; border-radius:999px; font-size:14px; white-space:nowrap;
+}
+
+/* ── fit marquee ── the same pills, scrolling. Rows alternate direction, and
+   the whole strip is full-bleed so the edge fade lands on the screen edge
+   rather than on the gutter. BEHAVIOUR.FIT_MARQUEE_ROWS 0 turns it off and the
+   static .fitrow above renders instead — that is also the reduced-motion and
+   no-JS shape, so nothing here is load-bearing. */
+.marquee{
+  margin-top:var(--s3);
+  margin-inline:calc(var(--gutter) * -1);
+  -webkit-mask-image:linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
+          mask-image:linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
+}
+.marquee__row{ overflow:hidden; }
+.marquee__row + .marquee__row{ margin-top:8px; }
+.marquee__track{
+  display:flex; gap:8px; width:max-content;
+  animation:marquee-x var(--dur,40s) linear infinite;
+}
+/* Every second row runs the other way. The pair reads as motion rather than as
+   one long conveyor, which is the whole point of the effect. */
+.marquee__row:nth-child(even) .marquee__track{ animation-direction:reverse; }
+@keyframes marquee-x{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
+@media (hover:hover) and (pointer:fine){
+  .marquee:hover .marquee__track{ animation-play-state:paused; }
+}
+/* The global reduce-motion rule only shortens durations, which would leave the
+   track parked mid-scroll with half its pills off-screen. Stop it properly and
+   let the row wrap like the static strip it is standing in for. */
+@media (prefers-reduced-motion: reduce){
+  .marquee{ margin-inline:0; -webkit-mask-image:none; mask-image:none; }
+  .marquee__row{ overflow:visible; }
+  .marquee__row + .marquee__row{ margin-top:8px; }
+  .marquee__track{ animation:none; flex-wrap:wrap; width:auto; }
+  .marquee__track [aria-hidden="true"]{ display:none; }
+}
 
 /* ── people rows ── named client results, screenshot treatment */
 .people{ list-style:none; margin:0; padding:0; }
@@ -609,6 +678,7 @@ tfoot td{ font-family:var(--font-num); font-size:19px; font-weight:700; letter-s
       <section class="blk" id="lFitBlk" hidden>
         <h2 class="d3" id="lFitH2"></h2>
         <ul class="fitrow" id="lFit"></ul>
+        <div class="marquee" id="lFitMarquee" hidden></div>
       </section>
       <div class="note">
         <p class="meta note__t" id="lHonestyT"></p>
@@ -625,10 +695,6 @@ tfoot td{ font-family:var(--font-num); font-size:19px; font-weight:700; letter-s
         <p class="body-sm taxextra" id="lTaxExtra"></p>
         <p class="taxfoot" id="lTaxFoot"></p>
       </section>
-      <section class="blk">
-        <h2 class="d3" id="lContractH2"></h2>
-        <ul class="fixlist" id="lContract"></ul>
-      </section>
       <section class="blk" id="lOutcomesBlk">
         <h2 class="meta" id="lOutcomesH"></h2>
         <ul class="outcomes sub" id="lOutcomes"></ul>
@@ -637,6 +703,16 @@ tfoot td{ font-family:var(--font-num); font-size:19px; font-weight:700; letter-s
       <section class="blk" id="lCaseBlk" hidden>
         <h2 class="d3" id="lCaseH"></h2>
         <ul id="lCases"></ul>
+      </section>
+      <!-- The closing block. Last thing before the CTA on purpose: it is the
+           promise the visitor is about to act on, so it sits where the thumb
+           already is. Its heading and list are the same config keys that used
+           to render mid-page — this block was MOVED, not added, so the page
+           does not say what you get twice. -->
+      <section class="blk" id="lContractBlk">
+        <h2 class="d3" id="lContractH2"></h2>
+        <ul class="fixlist" id="lContract"></ul>
+        <p class="legal sub" id="lClosingNote"></p>
       </section>
     </div>
     <div class="dock">
@@ -833,7 +909,7 @@ var CONFIG = {
     OG_URL:       '',          // SLOT — '' → og:url not emitted; falls back to CANONICAL
     ROBOTS:       'noindex,nofollow',   // paid-traffic page; set '' to allow indexing
     LOCALE:       'en_IN',
-    PAGE_VERSION: 'stax-2026-08-14.3'   // ships in the payload; bump on any copy edit
+    PAGE_VERSION: 'stax-2026-08-14.4'   // ships in the payload; bump on any copy edit
   },
 
   /* ── 2. BRAND ─────────────────────────────────────────────────────────────
@@ -946,9 +1022,21 @@ var CONFIG = {
                'That is a scale tax.'
       },
       leaks_h2:  'The same five leaks show up in nine out of ten accounts',
-      contract_h2:'What you walk away with',
+      /* This block is now the LAST thing on the landing screen, directly above
+         the CTA. It was moved, not duplicated — nothing else on the page states
+         what the visitor walks away with. */
+      contract_h2:'What you get at the end',
       contract:  ['Your leak in rupees, split five ways.',
                   'What to fix first, in order.'],
+      /* The reference page this was modelled on closes with "nobody will cold
+         call you". We cannot say that: the consent checkbox on the gate asks
+         for agreement to be contacted on WhatsApp, phone and email, so the
+         promise this page can actually keep is the narrower one — that the
+         contact is about this diagnostic and nothing else. Keep these two
+         sentences in step with CONSENT.LABEL; if one changes, so does the
+         other. '' hides the line.                                            */
+      closing_note:'Your answers are used to prepare your breakdown, and we only ' +
+                   'contact you about this diagnostic.',
       proof_h:   'Who we are',
       /* The fit strip. Empty array hides the block. */
       fit_h2:    'Built for people who sell what they know',
@@ -966,7 +1054,11 @@ var CONFIG = {
          platforms once either id is set.                                      */
       privacy_line: '',
       cta:       'Show me my scale tax',
-      cta_note:  'Free. Your number is on the next-to-last screen.',
+      /* REMOVED BY CLIENT DECISION (2026-08-14). It said two things: that the
+         diagnostic is free, and that contact details are asked for late. The
+         header note still carries "Free"; nothing now warns that a phone number
+         is coming, so the gate is the first the visitor hears of it.          */
+      cta_note:  '',
       case_h:    'Client results'
     },
     chrome: {
@@ -976,11 +1068,18 @@ var CONFIG = {
       progress_label:'Diagnostic progress'
     },
     questions: {
-      assure:  'Nine questions, about two minutes. No contact details until the end.',
+      /* REMOVED BY CLIENT DECISION (2026-08-14), with COPY.landing.cta_note.
+         Between them they were the page's promise that contact details come
+         late; nothing states it before the gate now.                         */
+      assure:  '',
       next:    'Continue',
+      /* The two blocked states stay: they are what the button's own
+         aria-describedby reads out, and what a blocked tap announces. Only the
+         idle line below them is off — when an answer is in, the note is now
+         blank and the dock is the button alone. */
       blocked_next: 'Pick an option to continue.',
       blocked_sub:  'One more answer below, then you can continue.',
-      ready:        'Continue when you are ready.',
+      ready:        '',
       last:    'See my number',
       review_bar: 'You have already seen your number. Change an answer and recalculate.',
       recalc:  'Recalculate'
@@ -1643,6 +1742,12 @@ var CONFIG = {
     RESTORE_TTL_HOURS:   24,
     CALC_MS:             700,    // 0 disables the working-out screen entirely
     COUNTUP_MS:          1200,
+    /* The "Built for" strip. ROWS 0 → the static wrapping strip renders instead
+       (also what reduced-motion and no-JS get). SECONDS is the base loop for
+       row 1; each row after it runs slightly slower so the rows never fall into
+       step and read as one block sliding. */
+    FIT_MARQUEE_ROWS:    3,
+    FIT_MARQUEE_SECONDS: 34,
     /* 6s aborted requests the server had already accepted on Indian mobile,
        and every abort became a retry, then a beacon — up to three deliveries
        of one lead. An abort now goes straight to the beacon, and every copy
@@ -2508,9 +2613,13 @@ function refreshContinue(){
                   : (last ? cfg('COPY.questions.last') : cfg('COPY.questions.next'));
   var ok = state.answers[qid] !== undefined && !pendingChild(qid);
   btn.setAttribute('aria-disabled', ok ? 'false' : 'true');
-  why.textContent = ok ? cfg('COPY.questions.ready')
+  /* setTextKeep, not textContent: the node has to survive an empty ready state
+     so the button's aria-describedby still resolves and the blocked strings can
+     fill it again — but it hides while blank, or the dock keeps a note-shaped
+     gap under the button. */
+  setTextKeep(why, ok ? cfg('COPY.questions.ready')
     : (state.answers[qid] === undefined ? cfg('COPY.errors.blocked_next') || cfg('COPY.questions.blocked_next')
-                                        : cfg('COPY.questions.blocked_sub'));
+                                        : cfg('COPY.questions.blocked_sub')));
 }
 function onNext(){
   var qid = qidOf(state.screen);
@@ -3606,6 +3715,7 @@ function renderLanding(){
   setText($('#lContractH2'), C.contract_h2);
   var lc = $('#lContract'); clear(lc);
   (C.contract || []).forEach(function(s){ lc.appendChild(el('li', null, s)); });
+  setText($('#lClosingNote'), C.closing_note);
   setText($('#lProofH'), C.proof_h);
   var lBk = cfg('PROOF.BACKERS', []) || [], lSt = cfg('PROOF.STATS', []) || [];
   renderProof($('#lBackers'), $('#lStats'), lBk, lSt);
@@ -3617,6 +3727,7 @@ function renderLanding(){
     setText($('#lFitH2'), C.fit_h2);
     var fl = $('#lFit'); clear(fl);
     fits.forEach(function(s){ fl.appendChild(el('li', null, s)); });
+    renderFitMarquee(fits);
   }
 
   /* Landing only. Never rendered beside the visitor's personalised figure. */
@@ -3669,6 +3780,79 @@ function renderLanding(){
   setText($('#lCtaNote'), C.cta_note);
   setText($('#qAssure'), cfg('COPY.questions.assure'));
   setText($('#backLabel'), cfg('COPY.chrome.back'));
+}
+/* ══════════════════════════════════════════════════════════════════════════════
+   THE FIT MARQUEE
+   Rows of the same pills, scrolling in alternating directions behind an edge
+   fade. Three things make it work, and all three are easy to get wrong:
+
+   1. SEAMLESS LOOP. The track holds the same sequence TWICE and slides exactly
+      -50%, so the moment it wraps, frame N is pixel-identical to frame 0. Any
+      other distance visibly jumps.
+   2. THE HALF MUST OVERFLOW. If one half is narrower than the screen, -50%
+      slides it clear and leaves a gap crossing the viewport. The sequence is
+      repeated until it is wider than the row before the halves are built, which
+      is why this measures the DOM instead of guessing a count.
+   3. THE COPY IS DECORATION. Only the first half is real to a screen reader;
+      the duplicate is aria-hidden, or every label is announced twice.
+
+   Falls back to the static #lFit strip whenever ROWS is 0, and both are left in
+   the DOM under reduced motion — the CSS decides which is shown.             */
+function renderFitMarquee(items){
+  var host = $('#lFitMarquee'), stat = $('#lFit');
+  if (!host) return;
+  var rows = num(cfg('BEHAVIOUR.FIT_MARQUEE_ROWS'));
+  var secs = num(cfg('BEHAVIOUR.FIT_MARQUEE_SECONDS')) || 34;
+  clear(host);
+  if (!rows || !items.length){ setHidden(host, true); setHidden(stat, false); return; }
+  rows = Math.min(rows, items.length);      /* never more rows than pills */
+  setHidden(host, false); setHidden(stat, true);
+
+  var pill = function(s, dupe){
+    var n = el('span', 'marquee__pill', s);
+    if (dupe) n.setAttribute('aria-hidden', 'true');
+    return n;
+  };
+  /* Every row carries the WHOLE list, each starting at a different point in it.
+     Splitting the list across rows instead would give a six-item config two
+     pills per row, and two pills cycling past is visibly a loop. Rotated, each
+     row shows all six in a different phase and the strip reads as variety. */
+  var buckets = [], step = Math.max(1, Math.floor(items.length / rows));
+  for (var r = 0; r < rows; r++){
+    var off = (r * step) % items.length;
+    buckets.push(items.slice(off).concat(items.slice(0, off)));
+  }
+
+  buckets.forEach(function(list, i){
+    if (!list.length) return;
+    var row = el('div', 'marquee__row');
+    var track = el('div', 'marquee__track');
+    row.appendChild(track); host.appendChild(row);
+
+    /* One pass, measured, then repeated until it overflows the row. The cap is
+       a guard against a pathological config (one two-letter pill) spinning this
+       into thousands of nodes. */
+    var half = document.createElement('div');
+    half.style.cssText = 'display:flex;gap:8px';
+    /* Row 0's first pass is the one real reading of the list. Rows 1 and 2 hold
+       the same labels rotated, so to a screen reader they are pure repetition. */
+    list.forEach(function(s){ half.appendChild(pill(s, i > 0)); });
+    track.appendChild(half);
+    var want = row.getBoundingClientRect().width || 640;
+    for (var guard = 0; guard < 12 && half.getBoundingClientRect().width < want * 1.2; guard++){
+      /* Repeats are decoration too: without the flag a screen reader reads the
+         same six labels three times over before it reaches the duplicate half. */
+      list.forEach(function(s){ half.appendChild(pill(s, true)); });
+    }
+    /* The second half is the same nodes again, hidden from AT. */
+    var copy = half.cloneNode(true);
+    Array.prototype.forEach.call(copy.children, function(n){ n.setAttribute('aria-hidden','true'); });
+    track.appendChild(copy);
+
+    /* Each row a little slower than the one above it. Equal speeds in opposite
+       directions still beat visibly against each other. */
+    track.style.setProperty('--dur', (secs + i * 6) + 's');
+  });
 }
 function renderFooter(){
   var F = cfg('COPY.footer'), host = $('#footerIn'); clear(host);
