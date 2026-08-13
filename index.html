@@ -958,10 +958,13 @@ var CONFIG = {
          more than RevX publishes: its own page calls these creator milestones
          after moving to Exly, not a rate across a managed book.              */
       outcomes_h:'What RevX reports',
-      /* Must stay true with a pixel or a tag manager configured: the answers
-         DO leave for the ad platforms, which the consent notice discloses.   */
-      privacy_line: 'Your answers go to us and our CRM. We contact you only about ' +
-                    'this diagnostic, and nothing here records your screen.',
+      /* REMOVED BY CLIENT DECISION (2026-08-14). This was the only statement on
+         the landing screen about where the answers go; with it blank, the first
+         time a visitor is told anything is the consent checkbox on the gate,
+         and the footer privacy link. If it is restored it must stay true with a
+         pixel or a tag manager configured — the answers DO leave for the ad
+         platforms once either id is set.                                      */
+      privacy_line: '',
       cta:       'Show me my scale tax',
       cta_note:  'Free. Your number is on the next-to-last screen.',
       case_h:    'Client results'
